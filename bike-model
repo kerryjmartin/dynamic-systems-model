@@ -1,0 +1,39 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+### below is a model that is built on a dynamic systems model
+# A(mhr-hr)^alpha*(hr-rhr)^beta*(wreserve)
+
+A = .0023
+mhr = 188
+alpha = 1
+rhr = 43
+beta = 1
+gamma = 1
+max_power = 350
+vo2m = 60
+mass = 64
+
+ride['hrr'] = (ride['hr']-rhr)/(mhr - rhr)
+ride['vo2r'] = (ride['vo2']/mass-3.5)/(vo2m - 3.5)
+ride['est_vo2'] = 11*ride['Power']/64+7
+ride['rolling_est_vo2'] = ride['est_vo2'].rolling(window = 4).mean()
+
+
+est_hr = [78]
+num = 0
+for i in ride['Power']:
+    hrr = (est_hr[num]-rhr)/(mhr-rhr)
+    delta_hr = A*((193-est_hr[num])**alpha)*((est_hr[num]-40)**beta)*(((i/max_power)-hrr)**gamma)
+    new_hr = est_hr[num] + delta_hr.real
+    ride.loc[num,'delta_hr'] = delta_hr.real
+    est_hr.append(new_hr)
+    num += 1
+
+ride['est_hr'] = est_hr[1:273]
+
+plt.scatter(x = ride['secs'], y = ride['hr'])
+plt.scatter(x = ride['secs'], y = ride['est_hr'])
+plt.show()
+
